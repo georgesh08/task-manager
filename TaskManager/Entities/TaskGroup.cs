@@ -2,7 +2,15 @@ namespace TaskManager.Entities;
 
 public class TaskGroup
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; private set; }
     public string Name { get; set; }
-    public List<Task> Tasks { get; set; }
+
+    public TaskGroup(string name)
+    {
+        Name = name;
+    }
+    public TaskGroup()
+    {
+        Id = Guid.NewGuid();
+    }
 }
