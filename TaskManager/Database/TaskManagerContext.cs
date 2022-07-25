@@ -104,4 +104,9 @@ public class TaskManagerContext : DbContext, IDatabase
     {
         return Subtasks.ToList();
     }
+
+    void IDatabase.SaveChanges()
+    {
+        SaveChanges();
+    }
 }

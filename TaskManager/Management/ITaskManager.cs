@@ -5,6 +5,7 @@ namespace TaskManager.Management;
 
 public interface ITaskManager
 {
+    string ExportPath { get; } 
     Task CreateNewTask(string info);
     IEnumerable<Task> GetAllTasks();
     void RemoveTask(Guid taskId);

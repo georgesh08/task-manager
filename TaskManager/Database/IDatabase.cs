@@ -17,4 +17,5 @@ public interface IDatabase
     List<TaskGroup> GetNonEmptyGroups();
     IEnumerable<Task> Tasks();
     IEnumerable<Subtask> Subtasks();
+    void SaveChanges();
 }

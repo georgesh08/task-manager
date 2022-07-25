@@ -7,12 +7,12 @@ namespace TaskManager.Management;
 public class Manager : ITaskManager
 {
     private IDatabase _database;
-    private string _exportPath;
+    public string ExportPath { get; }
 
     public Manager(IDatabase databaseContext, string exportPath)
     {
         _database = databaseContext;
-        _exportPath = exportPath;
+        ExportPath = exportPath;
     }
     
     public Task CreateNewTask(string info)
@@ -113,7 +113,7 @@ public class Manager : ITaskManager
 
     public void ExportData()
     {
-        throw new NotImplementedException();
+        
     }
 
     public void LoadData(string path)
