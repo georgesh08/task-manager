@@ -15,12 +15,17 @@ public class Manager : ITaskManager
         ExportPath = exportPath;
     }
     
-    public Task CreateNewTask(string info)
+    public Task CreateTask(string info)
     {
         var newTask = new Task();
         newTask.UpdateInformation(info);
         _database.AddTask(newTask);
         return newTask;
+    }
+
+    public Task? GetTask(int taskId)
+    {
+        return _database.GetTask(taskId);
     }
 
     public IEnumerable<Task> GetAllTasks()

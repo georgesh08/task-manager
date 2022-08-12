@@ -33,7 +33,7 @@ public class TaskManagerContext : DbContext, IDatabase
     public void AddTaskToGroup(int taskId, int groupId)
     {
         TaskGroup? group = TaskGroups.SingleOrDefault(g => g != null && g.UserId.Equals(groupId));
-        Task task = Tasks.SingleOrDefault(t => t != null && t.UserId.Equals(taskId));
+        Task? task = Tasks.SingleOrDefault(t => t != null && t.UserId.Equals(taskId));
         if (task != null) task.Group = group;
         SaveChanges();
     }

@@ -8,7 +8,7 @@ public class TaskGroup
     [Key]
     public Guid Id { get; private set; }
     public int UserId { get; private set; }
-    public string Name { get; }
+    public string Name { get; private set; }
     
     public TaskGroup() { }
 
