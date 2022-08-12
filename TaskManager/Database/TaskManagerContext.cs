@@ -30,17 +30,17 @@ public class TaskManagerContext : DbContext, IDatabase
         SaveChanges();
     }
 
-    public void AddTaskToGroup(Guid taskId, Guid groupId)
+    public void AddTaskToGroup(int taskId, int groupId)
     {
-        Task<TaskGroup?> group = TaskGroups.SingleOrDefaultAsync(g => g != null && g.Id.Equals(groupId));
-        Task<Task?> task = Tasks.SingleOrDefaultAsync(t => t != null && t.Id.Equals(taskId));
-        if (task.Result != null) task.Result.Group = group.Result;
+        TaskGroup? group = TaskGroups.SingleOrDefault(g => g != null && g.UserId.Equals(groupId));
+        Task task = Tasks.SingleOrDefault(t => t != null && t.UserId.Equals(taskId));
+        if (task != null) task.Group = group;
         SaveChanges();
     }
 
-    public void DeleteTask(Guid taskId)
+    public void DeleteTask(int taskId)
     {
-        Task? task = Tasks.Find(taskId);
+        Task? task = Tasks.SingleOrDefault(t => t != null && t.UserId.Equals(taskId));
         var subTasks = Subtasks.ToList();
         foreach (Subtask? subtask in subTasks.Where(subtask => subtask?.Task != null && subtask.Task.Equals(task)))
         {
@@ -51,9 +51,9 @@ public class TaskManagerContext : DbContext, IDatabase
         SaveChanges();
     }
 
-    public void DeleteGroup(Guid groupId)
+    public void DeleteGroup(int groupId)
     {
-        TaskGroup? deleteGroup = TaskGroups.Find(groupId);
+        TaskGroup? deleteGroup = TaskGroups.SingleOrDefault(g => g != null && g.UserId.Equals(groupId));
         var tasks = Tasks.ToList();
         foreach (Task? task in tasks.Where(task => task?.Group != null && task.Group.Equals(deleteGroup)))
         {
@@ -64,22 +64,22 @@ public class TaskManagerContext : DbContext, IDatabase
         SaveChanges();
     }
 
-    public void DeleteSubtask(Guid subtaskId)
+    public void DeleteSubtask(int subtaskId)
     {
-        Subtask? subtask = Subtasks.Find(subtaskId);
+        Subtask? subtask = Subtasks.SingleOrDefault(s => s != null && s.UserId.Equals(subtaskId));
         if (subtask == null) return;
         Subtasks.Remove(subtask);
         SaveChanges();
     }
 
-    public Task? GetTask(Guid taskId)
+    public Task? GetTask(int taskId)
     {
-        return Tasks.Find(taskId);
+        return Tasks.SingleOrDefault(t => t != null && t.UserId.Equals(taskId));
     }
 
-    public Subtask? GetSubtask(Guid subtaskId)
+    public Subtask? GetSubtask(int subtaskId)
     {
-        return Subtasks.Find(subtaskId);
+        return Subtasks.SingleOrDefault(s => s != null && s.UserId.Equals(subtaskId));
     }
 
     public List<TaskGroup> GetNonEmptyGroups()

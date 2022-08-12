@@ -85,7 +85,7 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.RemoveTask(Guid.Parse(param[1]));
+                    _manager.RemoveTask(int.Parse(param[1]));
                     _logger.Information("Task {Id} deleted", param[1]);
                     break;
                 
@@ -110,7 +110,7 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.SetTaskDeadline(Guid.Parse(param[1]), DateOnly.Parse(param[2]));
+                    _manager.SetTaskDeadline(int.Parse(param[1]), DateOnly.Parse(param[2]));
                     _logger.Information("{Deadline} was set as deadline for {Id}", param[2], param[1]);
                     break;
                 
@@ -132,7 +132,7 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.RemoveTaskGroup(Guid.Parse(param[1]));
+                    _manager.RemoveTaskGroup(int.Parse(param[1]));
                     _logger.Information("{Id} group deleted", param[1]);
                     break;
                 
@@ -141,7 +141,7 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.AddTaskToGroup(Guid.Parse(param[1]), Guid.Parse(param[2]));
+                    _manager.AddTaskToGroup(int.Parse(param[1]), int.Parse(param[2]));
                     _logger.Information("Added task {TaskId} to group {GroupId}", param[1], param[2]);
                     break;
                 
@@ -150,7 +150,7 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.RemoveTaskFromGroup(Guid.Parse(param[1]));
+                    _manager.RemoveTaskFromGroup(int.Parse(param[1]));
                     _logger.Information("Removed task {TaskId} from group", param[1]);
                     break;
                 
@@ -172,12 +172,12 @@ public class ConsoleInterface : IConsoleInterface
                     {
                         break;
                     }
-                    _manager.AttachSubtaskToTask(Guid.Parse(param[1]), Guid.Parse(param[2]));
+                    _manager.AttachSubtaskToTask(int.Parse(param[1]), int.Parse(param[2]));
                     _logger.Information("Linked subtask {SubtaskId} and task {TaskId}", param[1], param[2]);
                     break;
                 
                 case "complete-subtask":
-                    _manager.CompleteSubtask(Guid.Parse(param[1]));
+                    _manager.CompleteSubtask(int.Parse(param[1]));
                     _logger.Information("Subtask {Id} deleted", param[1]);
                     break;
                 

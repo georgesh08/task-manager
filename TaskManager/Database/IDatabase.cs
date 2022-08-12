@@ -8,12 +8,12 @@ public interface IDatabase
     void AddTask(Task task);
     void AddSubtask(Subtask subtask);
     void AddTaskGroup(TaskGroup group);
-    void AddTaskToGroup(Guid taskId, Guid groupId);
-    void DeleteTask(Guid taskId);
-    void DeleteGroup(Guid groupId);
-    void DeleteSubtask(Guid subtaskId);
-    Task? GetTask(Guid taskId);
-    Subtask? GetSubtask(Guid subtaskId);
+    void AddTaskToGroup(int taskId, int groupId);
+    void DeleteTask(int taskId);
+    void DeleteGroup(int groupId);
+    void DeleteSubtask(int subtaskId);
+    Task? GetTask(int taskId);
+    Subtask? GetSubtask(int subtaskId);
     List<TaskGroup> GetNonEmptyGroups();
     IEnumerable<Task> Tasks();
     IEnumerable<Subtask> Subtasks();

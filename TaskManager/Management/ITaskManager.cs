@@ -8,20 +8,20 @@ public interface ITaskManager
     string ExportPath { get; } 
     Task CreateNewTask(string info);
     IEnumerable<Task> GetAllTasks();
-    void RemoveTask(Guid taskId);
-    void CompleteTask(Guid taskId);
+    void RemoveTask(int taskId);
+    void CompleteTask(int taskId);
     List<Task> GetAllCompletedTasks();
-    void SetTaskDeadline(Guid taskId, DateOnly deadline);
+    void SetTaskDeadline(int taskId, DateOnly deadline);
     List<Task> GetTodayTask();
     TaskGroup CreateNewTaskGroup(string name);
-    void RemoveTaskGroup(Guid groupId);
-    void AddTaskToGroup(Guid taskId, Guid groupId);
-    void RemoveTaskFromGroup(Guid taskId);
+    void RemoveTaskGroup(int groupId);
+    void AddTaskToGroup(int taskId, int groupId);
+    void RemoveTaskFromGroup(int taskId);
     List<TaskGroup> GetGroupsWithTasks();
     Subtask CreateSubtask(string subtaskInfo);
-    void AttachSubtaskToTask(Guid subtaskId, Guid taskId);
-    void CompleteSubtask(Guid subtaskId);
-    List<Subtask> GetAllSubtasks(Guid taskId);
+    void AttachSubtaskToTask(int subtaskId, int taskId);
+    void CompleteSubtask(int subtaskId);
+    List<Subtask> GetAllSubtasks(int taskId);
     void ExportData();
     void LoadData(string path);
 }

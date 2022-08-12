@@ -28,15 +28,16 @@ public class Manager : ITaskManager
         return _database.Tasks();
     }
 
-    public void RemoveTask(Guid taskId)
+    public void RemoveTask(int taskId)
     {
         _database.DeleteTask(taskId);
     }
 
-    public void CompleteTask(Guid taskId)
+    public void CompleteTask(int taskId)
     {
         Task? task = _database.GetTask(taskId);
         task?.CompleteTask();
+        _database.SaveChanges();
     }
 
     public List<Task> GetAllCompletedTasks()
@@ -44,10 +45,11 @@ public class Manager : ITaskManager
         return GetAllTasks().Where(task => task.IsCompleted).ToList();
     }
 
-    public void SetTaskDeadline(Guid taskId, DateOnly deadline)
+    public void SetTaskDeadline(int taskId, DateOnly deadline)
     {
         Task? task = _database.GetTask(taskId);
         task?.SetDeadline(deadline);
+        _database.SaveChanges();
     }
 
     public List<Task> GetTodayTask()
@@ -57,27 +59,26 @@ public class Manager : ITaskManager
 
     public TaskGroup CreateNewTaskGroup(string name)
     {
-        var taskGroup = new TaskGroup
-        {
-            Name = name
-        };
+        var taskGroup = new TaskGroup(name);
         _database.AddTaskGroup(taskGroup);
         return taskGroup;
     }
 
-    public void RemoveTaskGroup(Guid groupId)
+    public void RemoveTaskGroup(int groupId)
     {
         _database.DeleteGroup(groupId);
     }
 
-    public void AddTaskToGroup(Guid taskId, Guid groupId)
+    public void AddTaskToGroup(int taskId, int groupId)
     {
         _database.AddTaskToGroup(taskId, groupId);
     }
 
-    public void RemoveTaskFromGroup(Guid taskId)
+    public void RemoveTaskFromGroup(int taskId)
     {
-        _database.GetTask(taskId)!.Group = null;
+        Task? task = _database.GetTask(taskId);
+        if (task != null) task.Group = null;
+        _database.SaveChanges();
     }
 
     public List<TaskGroup> GetGroupsWithTasks()
@@ -93,27 +94,29 @@ public class Manager : ITaskManager
         return subtask;
     }
 
-    public void AttachSubtaskToTask(Guid subtaskId, Guid taskId)
+    public void AttachSubtaskToTask(int subtaskId, int taskId)
     {
         Task? task = _database.GetTask(taskId);
         Subtask? subtask = _database.GetSubtask(subtaskId);
         if (task != null) subtask?.SetTask(task);
+        _database.SaveChanges();
     }
 
-    public void CompleteSubtask(Guid subtaskId)
+    public void CompleteSubtask(int subtaskId)
     {
         Subtask? subtask = _database.GetSubtask(subtaskId);
         subtask?.CompleteTask();
+        _database.SaveChanges();
     }
 
-    public List<Subtask> GetAllSubtasks(Guid taskId)
+    public List<Subtask> GetAllSubtasks(int taskId)
     {
         return _database.Subtasks().ToList();
     }
 
     public void ExportData()
     {
-        
+        throw new NotImplementedException();
     }
 
     public void LoadData(string path)
