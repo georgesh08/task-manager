@@ -5,15 +5,16 @@ namespace TaskManager.Entities;
 
 public abstract class AbstractTask
 {
+    [Key]
     public Guid Id { get; private set; }
     public int UserId { get; private set; }
     public string Information { get; private set; } = "";
     public bool IsCompleted { get; private set; }
-
+    
     public AbstractTask()
     {
         Id = Guid.NewGuid();
-        UserId = TaskIdGenerator.GetInstance().GenerateId();
+        UserId = IdGenerator.GetInstance().GenerateTaskId();
     }
 
     public void CompleteTask()

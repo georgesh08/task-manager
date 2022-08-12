@@ -5,15 +5,17 @@ namespace TaskManager.Entities;
 
 public class TaskGroup
 {
-    public Guid Id { get; private set; }
     [Key]
+    public Guid Id { get; private set; }
     public int UserId { get; private set; }
     public string Name { get; }
+    
+    public TaskGroup() { }
 
     public TaskGroup(string name)
     {
         Name = name;
         Id = Guid.NewGuid();
-        UserId = GroupIdGenerator.GetInstance().GenerateId();
+        UserId = IdGenerator.GetInstance().GenerateGroupId();
     }
 }
