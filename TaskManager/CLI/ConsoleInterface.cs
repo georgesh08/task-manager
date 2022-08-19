@@ -1,9 +1,10 @@
-﻿using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using TaskManager.Management;
 using Serilog;
 using Serilog.Core;
 using TaskManager.Entities;
+using TaskManager.Exceptions;
+using TaskManager.Tools;
 using Task = TaskManager.Entities.Task;
 
 namespace TaskManager.CLI;
@@ -24,6 +25,7 @@ namespace TaskManager.CLI;
 ///   --remove-task-from-group {task_id} - removes task from group
 ///   --get-nonempty-groups - returns every not empty group (group with >= 1 task)
 ///   --create-subtask {subtask_info} - creates new subtask. Information must be inside curly braces.
+///   --delete-subtask {subtask_id} - deletes subtask by ID
 ///   --link-subtask {subtask_id} {task_id} - attaches subtask to task
 ///   --complete-subtask {subtask_id} - completes subtask
 ///   --list-subtasks - returns information about every subtask in database
@@ -99,21 +101,25 @@ public class ConsoleInterface : IConsoleInterface
                         case "complete-task":
                             CompleteTask(int.Parse(param[1]));
                             break;
+                        
+                        case "delete-subtask":
+                            DeleteSubtask(int.Parse(param[1]));
+                            break;
 
                         case "list-tasks":
                             GetAllTasks();
                             break;
 
                         case "get-completed-tasks":
-                            // TODO
+                            GetCompletedTasks();
                             break;
 
                         case "set-deadline":
-                            SetDeadline(int.Parse(param[1]), DateOnly.Parse(param[1]));
+                            SetDeadline(int.Parse(param[1]), DateTime.Parse(param[1]));
                             break;
 
                         case "today-tasks":
-                            // TODO
+                            GetTodayTasks();
                             break;
 
                         case "create-group":
@@ -145,7 +151,7 @@ public class ConsoleInterface : IConsoleInterface
                             break;
 
                         case "list-subtasks":
-                            // TODO
+                            GetAllSubtasks();
                             break;
 
                         case "export":
@@ -171,8 +177,46 @@ public class ConsoleInterface : IConsoleInterface
     {
         int start = command.IndexOf('{') + 1;
         int end = command.Length - 1;
-        return command.Substring(start, end - start - 1);
+        return command.Substring(start, end - start);
     }
+
+    private void DeleteSubtask(int id)
+    {
+        if (!IsCorrectNumberOfParams(1, _numberOfParams))
+        {
+            return;
+        }
+
+        try
+        {
+            _manager.DeleteSubtask(id);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        _logger.Information("Task {Id} deleted.", id);
+    }
+
+    private void GetCompletedTasks()
+    {
+        if (!IsCorrectNumberOfParams(0, _numberOfParams))
+        {
+            return;
+        }
+
+        List<Task> completedTasks = _manager.GetAllCompletedTasks();
+        var tasks = completedTasks.Select(task => 
+            ExportConverter.GetInstance().ConvertToExportTask(_manager, task))
+            .ToList();
+
+        foreach (string result in tasks.Select(exportTask => JsonConvert.SerializeObject(exportTask, Formatting.Indented)))
+        {
+            Console.WriteLine(result);
+        }
+    }
+    
     private void GetAllTasks()
     {
         if (!IsCorrectNumberOfParams(0, _numberOfParams))
@@ -180,18 +224,53 @@ public class ConsoleInterface : IConsoleInterface
             return;
         }
 
-        List<ExportTask> tasks = new();
-        foreach (Task task in _manager.GetAllTasks())
+        var tasks = _manager.GetAllTasks().Select(task => 
+            ExportConverter.GetInstance().ConvertToExportTask(_manager, task))
+            .ToList();
+
+        foreach (string result in tasks.Select(exportTask => JsonConvert.SerializeObject(exportTask, Formatting.Indented)))
         {
-            var exportTask = new ExportTask(task.Group, task.UserId, task.Information, task.IsCompleted, task.Deadline);
-            List<Subtask> tmp = _manager.GetAllSubtasks(task.UserId);
-            var subtasks = tmp.Select(subtask => 
-                new ExportSubtask(subtask.UserId, subtask.Information, subtask.IsCompleted)).ToList();
-            exportTask.RelatedSubtasks = subtasks;
-            tasks.Add(exportTask);
+            Console.WriteLine(result);
+        }
+    }
+
+    private void GetNonEmptyGroups()
+    {
+        if (!IsCorrectNumberOfParams(0, _numberOfParams))
+        {
+            return;
+        }
+        
+        
+    }
+
+    private void GetTodayTasks()
+    {
+        if (!IsCorrectNumberOfParams(0, _numberOfParams))
+        {
+            return;
+        }
+        
+        var tasks = _manager.GetTodayTasks().Select(task => 
+            ExportConverter.GetInstance().ConvertToExportTask(_manager, task))
+            .ToList();
+        
+        foreach (string result in tasks.Select(exportTask => JsonConvert.SerializeObject(exportTask, Formatting.Indented)))
+        {
+            Console.WriteLine(result);
+        }
+    }
+    
+    private void GetAllSubtasks()
+    {
+        if (!IsCorrectNumberOfParams(0, _numberOfParams))
+        {
+            return;
         }
 
-        foreach (string result in tasks.Select(exportTask => JsonConvert.SerializeObject(exportTask)))
+        var subtasks = _manager.GetAllSubtasks().Select(subtask => new ExportSubtask(subtask)).ToList();
+        foreach (string result in subtasks.Select(exportSubtask => 
+                     JsonConvert.SerializeObject(exportSubtask, Formatting.Indented)))
         {
             Console.WriteLine(result);
         }
@@ -203,7 +282,17 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.CompleteTask(taskId);
+
+        try
+        {
+            _manager.CompleteTask(taskId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("Task {TaskId} completed.", taskId);
     }
 
@@ -213,7 +302,17 @@ public class ConsoleInterface : IConsoleInterface
         {
            return;
         }
-        _manager.RemoveTaskFromGroup(taskId);
+
+        try
+        {
+            _manager.RemoveTaskFromGroup(taskId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("Removed task {TaskId} from group.", taskId);
     }
 
@@ -223,7 +322,17 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.AddTaskToGroup(taskId, groupId);
+
+        try
+        {
+            _manager.AddTaskToGroup(taskId, groupId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("Added task {TaskId} to group {GroupId}.", taskId, groupId);
     }
 
@@ -239,8 +348,8 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.ExportData();
-        _logger.Information("Data exported to {Path}.", _manager.ExportPath);
+        
+        // TODO
     }
 
     private void ImportData(string path)
@@ -249,8 +358,7 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.LoadData(path);
-        _logger.Information("Data imported to {Path}.", path);
+        // TODO
     }
 
     private void LinkSubtask(int subtaskId, int taskId)
@@ -259,7 +367,17 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.AttachSubtaskToTask(subtaskId, taskId);
+
+        try
+        {
+            _manager.AttachSubtaskToTask(subtaskId, taskId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("Linked subtask {SubtaskId} and task {TaskId}.", subtaskId, taskId);
     }
 
@@ -269,7 +387,17 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.RemoveTaskGroup(groupId);
+
+        try
+        {
+            _manager.RemoveTaskGroup(groupId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("{Id} group deleted.", groupId);
     }
 
@@ -279,6 +407,7 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
+        
         TaskGroup group = _manager.CreateNewTaskGroup(name);
         _logger.Information("{Name} group created with ID {Id}.", group.Name, group.UserId);
     }
@@ -289,8 +418,17 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.CompleteSubtask(subtaskId);
-        _logger.Information("Subtask {Id} deleted.", subtaskId);
+        try
+        {
+            _manager.CompleteSubtask(subtaskId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
+        _logger.Information("Subtask {Id} completed.", subtaskId);
     }
 
     private void CreateTask(string info)
@@ -305,7 +443,16 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-        _manager.RemoveTask(taskId);
+        try
+        {
+            _manager.RemoveTask(taskId);
+        }
+        catch (TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("Task {Id} deleted.", taskId);
     }
 
@@ -315,24 +462,36 @@ public class ConsoleInterface : IConsoleInterface
         {
             return;
         }
-
-        Task? task = _manager.GetTask(taskId);
-        if (task == null)
+        
+        try
         {
-            _logger.Error("No task with such ID.");
+            Task task = _manager.GetTask(taskId);
+            var data = new ExportTask(task);
+            string export = JsonConvert.SerializeObject(data, Formatting.Indented);
+            Console.WriteLine(export);
         }
-        var data = new ExportTask(task.Group, taskId, task.Information, task.IsCompleted, task.Deadline);
-        string export = JsonConvert.SerializeObject(data);
-        Console.WriteLine(export);
+        catch (Exception e)
+        {
+            _logger.Error(e, "Operation failed.");
+        }
     }
 
-    private void SetDeadline(int taskId, DateOnly deadline)
+    private void SetDeadline(int taskId, DateTime deadline)
     {
         if (!IsCorrectNumberOfParams(2, _numberOfParams))
         {
             return;
         }
-        _manager.SetTaskDeadline(taskId, deadline);
+        try
+        {
+            _manager.SetTaskDeadline(taskId, deadline);
+        }
+        catch(TaskManagerException e)
+        {
+            _logger.Error(e, "Operation failed.");
+            return;
+        }
+        
         _logger.Information("{Deadline} was set as deadline for {Id}.", deadline, taskId);
     }
 

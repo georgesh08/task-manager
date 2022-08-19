@@ -8,10 +8,10 @@ public class ExportSubtask
     
     public ExportSubtask() { }
 
-    public ExportSubtask(int id, string information, bool isCompleted)
+    public ExportSubtask(Subtask subtask)
     {
-        Id = id;
-        Information = information;
-        IsCompleted = isCompleted;
+        Id = subtask.UserId;
+        Information = subtask.Information;
+        IsCompleted = subtask.IsCompleted;
     }
 }

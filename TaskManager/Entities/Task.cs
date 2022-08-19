@@ -2,11 +2,11 @@ namespace TaskManager.Entities;
 
 public class Task : AbstractTask
 {
-    public DateOnly Deadline { get; private set; }
+    public DateTime Deadline { get; private set; } = DateTime.MinValue;
     public TaskGroup? Group { get; set; }
     
-    public void SetDeadline(DateOnly deadline)
+    public void SetDeadline(DateTime deadline)
     {
-        Deadline = deadline;
+        Deadline = deadline.Date;
     }
 }

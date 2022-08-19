@@ -1,5 +1,6 @@
 using TaskManager.Database;
 using TaskManager.Entities;
+using TaskManager.Exceptions;
 using Task = TaskManager.Entities.Task;
 
 namespace TaskManager.Management;
@@ -7,12 +8,10 @@ namespace TaskManager.Management;
 public class Manager : ITaskManager
 {
     private IDatabase _database;
-    public string ExportPath { get; }
 
-    public Manager(IDatabase databaseContext, string exportPath)
+    public Manager(IDatabase databaseContext)
     {
         _database = databaseContext;
-        ExportPath = exportPath;
     }
     
     public Task CreateTask(string info)
@@ -23,9 +22,15 @@ public class Manager : ITaskManager
         return newTask;
     }
 
-    public Task? GetTask(int taskId)
+    public Task GetTask(int taskId)
     {
-        return _database.GetTask(taskId);
+        Task? task = _database.GetTask(taskId);
+        if (task == null)
+        {
+            throw new ObjectExistenceException("No such object in database.");
+        }
+
+        return task;
     }
 
     public IEnumerable<Task> GetAllTasks()
@@ -41,7 +46,11 @@ public class Manager : ITaskManager
     public void CompleteTask(int taskId)
     {
         Task? task = _database.GetTask(taskId);
-        task?.CompleteTask();
+        if (task == null)
+        {
+            throw new ObjectExistenceException("No such task in database.");
+        }
+        task.CompleteTask();
         _database.SaveChanges();
     }
 
@@ -50,16 +59,20 @@ public class Manager : ITaskManager
         return GetAllTasks().Where(task => task.IsCompleted).ToList();
     }
 
-    public void SetTaskDeadline(int taskId, DateOnly deadline)
+    public void SetTaskDeadline(int taskId, DateTime deadline)
     {
         Task? task = _database.GetTask(taskId);
-        task?.SetDeadline(deadline);
+        if (task == null)
+        {
+            throw new ObjectExistenceException("No such task in database.");
+        }
+        task.SetDeadline(deadline);
         _database.SaveChanges();
     }
 
-    public List<Task> GetTodayTask()
+    public List<Task> GetTodayTasks()
     {
-        return GetAllTasks().Where(task => task.Deadline == DateOnly.FromDateTime(DateTime.Today)).ToList();
+        return GetAllTasks().Where(task => task.Deadline == DateTime.Today).ToList();
     }
 
     public TaskGroup CreateNewTaskGroup(string name)
@@ -76,13 +89,25 @@ public class Manager : ITaskManager
 
     public void AddTaskToGroup(int taskId, int groupId)
     {
-        _database.AddTaskToGroup(taskId, groupId);
+        Task? task = _database.GetTask(taskId);
+        TaskGroup? group = _database.GetGroup(groupId);
+        if (task == null || group == null)
+        {
+            throw new ObjectExistenceException("No such entity in database.");
+        }
+
+        task.Group = group;
+        _database.SaveChanges();
     }
 
     public void RemoveTaskFromGroup(int taskId)
     {
         Task? task = _database.GetTask(taskId);
-        if (task != null) task.Group = null;
+        if (task == null)
+        {
+            throw new ObjectExistenceException("No such task in database.");
+        }
+        task.Group = null;
         _database.SaveChanges();
     }
 
@@ -99,32 +124,51 @@ public class Manager : ITaskManager
         return subtask;
     }
 
+    public void DeleteSubtask(int subtaskId)
+    {
+        _database.DeleteSubtask(subtaskId);
+    }
+
     public void AttachSubtaskToTask(int subtaskId, int taskId)
     {
         Task? task = _database.GetTask(taskId);
         Subtask? subtask = _database.GetSubtask(subtaskId);
-        if (task != null) subtask?.SetTask(task);
+        if (task == null || subtask == null)
+        {
+            throw new ObjectExistenceException("No such entity in database.");
+        }
+
+        subtask.SetTask(task);
         _database.SaveChanges();
     }
 
     public void CompleteSubtask(int subtaskId)
     {
         Subtask? subtask = _database.GetSubtask(subtaskId);
-        subtask?.CompleteTask();
+        if (subtask == null)
+        {
+            throw new ObjectExistenceException("No such subtask in database.");
+        }
+        subtask.CompleteTask();
         _database.SaveChanges();
     }
 
-    public List<Subtask> GetAllSubtasks(int taskId)
+    public List<Subtask> GetAllSubtasks()
     {
         return _database.Subtasks().ToList();
     }
 
-    public void ExportData()
+    public List<ExportTask> LoadTasks(string importPath)
     {
         throw new NotImplementedException();
     }
 
-    public void LoadData(string path)
+    public List<ExportSubtask> LoadSubtasks(string importPath)
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<ExportGroup> LoadGGroups(string importPath)
     {
         throw new NotImplementedException();
     }
